@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuple Space Engine - Interactive Test Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for code blocks */
+        pre::-webkit-scrollbar {
+            height: 8px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: #2d3748; 
+            border-radius: 4px;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: #4a5568; 
+            border-radius: 4px;
+        }
+        pre::-webkit-scrollbar-thumb:hover {
+            background: #718096; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <!-- Header -->
+        <div class="bg-indigo-600 p-8 text-white">
+            <div class="flex items-center gap-3 mb-2">
+                <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <h1 class="text-3xl font-bold">Tuple Space Engine - Test Guide</h1>
+            </div>
+            <p class="text-indigo-100 text-sm mt-2">
+                Follow these steps in order to test the core mechanics of the distributed Tuple Space engine (Linda model). Copy the commands and paste them into your terminal.
+            </p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 md:p-8 space-y-10">
+
+            <!-- Step 1 -->
+            <div class="relative">
+                <div class="flex items-center mb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold rounded-full h-8 w-8 flex items-center justify-center mr-3 shrink-0 shadow-sm">1</span>
+                    <h2 class="text-xl font-semibold text-slate-800">Boot the Erlang Environment</h2>
+                </div>
+                <p class="text-sm text-slate-600 mb-3 ml-11">Make sure you are in the <code>gomoku_backend</code> directory and start the Rebar3 shell. This will automatically compile your code.</p>
+                <div class="ml-11 bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                    <pre id="code-1" class="text-emerald-400 font-mono text-sm overflow-x-auto">rebar3 shell</pre>
+                    <button onclick="copyCode(this, 'code-1')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative">
+                <div class="flex items-center mb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold rounded-full h-8 w-8 flex items-center justify-center mr-3 shrink-0 shadow-sm">2</span>
+                    <h2 class="text-xl font-semibold text-slate-800">Start the Server</h2>
+                </div>
+                <p class="text-sm text-slate-600 mb-3 ml-11">Once inside the Erlang shell (<code>1></code>), boot up the <code>gen_server</code> process. You should receive an <code>{ok,&lt;0.some_number&gt;}</code> response.</p>
+                <div class="ml-11 bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                    <pre id="code-2" class="text-emerald-400 font-mono text-sm overflow-x-auto">tuple_space:start_link().</pre>
+                    <button onclick="copyCode(this, 'code-2')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative">
+                <div class="flex items-center mb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold rounded-full h-8 w-8 flex items-center justify-center mr-3 shrink-0 shadow-sm">3</span>
+                    <h2 class="text-xl font-semibold text-slate-800">Test Write Operation (OUT)</h2>
+                </div>
+                <p class="text-sm text-slate-600 mb-3 ml-11">Let's simulate Player 1 placing a piece at coordinates X=5, Y=5. Since this is an asynchronous "cast", it will return <code>ok</code> immediately.</p>
+                <div class="ml-11 bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                    <pre id="code-3" class="text-emerald-400 font-mono text-sm overflow-x-auto">tuple_space:out({cell, 5, 5, player_1}).</pre>
+                    <button onclick="copyCode(this, 'code-3')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="relative">
+                <div class="flex items-center mb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold rounded-full h-8 w-8 flex items-center justify-center mr-3 shrink-0 shadow-sm">4</span>
+                    <h2 class="text-xl font-semibold text-slate-800">Test Non-Destructive Read (RD)</h2>
+                </div>
+                <p class="text-sm text-slate-600 mb-3 ml-11">Let's check if there's anything at 5,5. We use the special <code>'_'</code> atom (wildcard) to say "I don't care whose piece it is". The tuple will remain in memory.</p>
+                <div class="ml-11 bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                    <pre id="code-4" class="text-emerald-400 font-mono text-sm overflow-x-auto">tuple_space:rd({cell, 5, 5, '_'}).</pre>
+                    <button onclick="copyCode(this, 'code-4')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="relative">
+                <div class="flex items-center mb-2">
+                    <span class="bg-indigo-100 text-indigo-700 font-bold rounded-full h-8 w-8 flex items-center justify-center mr-3 shrink-0 shadow-sm">5</span>
+                    <h2 class="text-xl font-semibold text-slate-800">Test Destructive Read (IN)</h2>
+                </div>
+                <p class="text-sm text-slate-600 mb-3 ml-11">Now we physically extract the piece from the board. After this command, cell 5,5 will be empty again in our Tuple Space.</p>
+                <div class="ml-11 bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                    <pre id="code-5" class="text-emerald-400 font-mono text-sm overflow-x-auto">tuple_space:in({cell, 5, 5, '_'}).</pre>
+                    <button onclick="copyCode(this, 'code-5')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="relative bg-amber-50 border border-amber-200 rounded-xl p-5 ml-11 shadow-sm">
+                <div class="flex items-center mb-3">
+                    <span class="text-amber-500 font-bold mr-2 text-xl">⚠️</span>
+                    <h2 class="text-xl font-bold text-amber-900">Test the Blocking Queue (The Real Magic!)</h2>
+                </div>
+                <p class="text-sm text-amber-800 mb-4">Now that we have removed the tuple with the previous <code>in</code> command, let's try to request it again. Paste this command:</p>
+                <div class="bg-slate-900 rounded-lg p-4 relative group mb-4 shadow-inner">
+                    <pre id="code-6" class="text-emerald-400 font-mono text-sm overflow-x-auto">tuple_space:in({cell, 5, 5, '_'}).</pre>
+                    <button onclick="copyCode(this, 'code-6')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                </div>
+                <p class="text-sm text-amber-800">
+                    <strong>What just happened?</strong> Your shell froze! This is the exact expected behavior: your request has been parked in the server's <code>waiting</code> list because the tuple doesn't exist anymore.
+                </p>
+                
+                <div class="mt-5 border-t border-amber-200/60 pt-4">
+                    <h3 class="text-sm font-bold text-amber-900 mb-2 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        How to unblock your terminal:
+                    </h3>
+                    <ol class="list-decimal ml-5 text-sm text-amber-800 space-y-1">
+                        <li>Press <kbd class="bg-white border border-amber-200 px-1 rounded shadow-sm">Ctrl+G</kbd> (the <code>User switch command</code> menu will appear).</li>
+                        <li>Press <kbd class="bg-white border border-amber-200 px-1 rounded shadow-sm">i</kbd> (Interrupt) and hit Enter.</li>
+                        <li>Press <kbd class="bg-white border border-amber-200 px-1 rounded shadow-sm">c</kbd> (Connect) and hit Enter to return to the normal shell.</li>
+                    </ol>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Copy to Clipboard Script -->
+    <script>
+        function copyCode(buttonElement, elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            
+            // Create a hidden textarea to securely copy the text
+            const textArea = document.createElement("textarea");
+            textArea.value = codeText;
+            
+            // Prevent scrolling by placing it out of the viewport
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                // Visual feedback
+                const originalText = buttonElement.innerText;
+                buttonElement.innerText = "Copied!";
+                buttonElement.classList.replace('bg-slate-700', 'bg-emerald-600');
+                buttonElement.classList.replace('hover:bg-slate-600', 'hover:bg-emerald-500');
+                
+                setTimeout(() => {
+                    buttonElement.innerText = originalText;
+                    buttonElement.classList.replace('bg-emerald-600', 'bg-slate-700');
+                    buttonElement.classList.replace('hover:bg-emerald-500', 'hover:bg-slate-600');
+                }, 2000);
+            } catch (err) {
+                console.error('Fallback: Copy failed', err);
+                buttonElement.innerText = "Error!";
+            }
+            
+            document.body.removeChild(textArea);
+        }
+    </script>
+</body>
+</html>
