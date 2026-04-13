@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku Engine - Integration Tests</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for code blocks */
+        pre::-webkit-scrollbar {
+            height: 8px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: #2d3748; 
+            border-radius: 4px;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: #4a5568; 
+            border-radius: 4px;
+        }
+        pre::-webkit-scrollbar-thumb:hover {
+            background: #718096; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <!-- Header -->
+        <div class="bg-indigo-700 p-8 text-white relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10"></div>
+            
+            <div class="flex items-center gap-3 mb-2 relative z-10">
+                <svg class="w-8 h-8 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <h1 class="text-3xl font-bold">Gomoku Engine - Integration Tests</h1>
+            </div>
+            <p class="text-indigo-100 text-sm mt-2 max-w-2xl relative z-10">
+                This document outlines the step-by-step testing procedure for the Erlang Backend. 
+                It demonstrates the initialization of the actors, state management, and the interaction between the Gomoku Game Master and the underlying Tuple Space Engine.
+            </p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 md:p-8 space-y-12">
+
+            <!-- Phase 1: Bootstrapping -->
+            <section>
+                <h2 class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-6 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-700 text-sm py-1 px-3 rounded-full mr-3">Phase 1</span>
+                    Bootstrapping the Architecture
+                </h2>
+
+                <div class="space-y-8">
+                    <!-- Step 1 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">1</span>
+                        <h3 class="text-lg font-semibold text-slate-800 mb-1">Start the Application Environment</h3>
+                        <p class="text-sm text-slate-600 mb-3">Navigate to the <code>gomoku_backend</code> directory and start the Rebar3 shell to automatically compile and load the modules.</p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-1" class="text-emerald-400 font-mono text-sm overflow-x-auto">cd .\gomoku_backend\
+rebar3 shell</pre>
+                            <button onclick="copyCode(this, 'code-1')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">2</span>
+                        <h3 class="text-lg font-semibold text-slate-800 mb-1">Boot the Tuple Space Engine</h3>
+                        <p class="text-sm text-slate-600 mb-3">Initialize the <code>tuple_space</code> gen_server. This creates the ETS table in memory that will act as our distributed shared database.</p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-2" class="text-emerald-400 font-mono text-sm overflow-x-auto">tuple_space:start_link().</pre>
+                            <button onclick="copyCode(this, 'code-2')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">3</span>
+                        <h3 class="text-lg font-semibold text-slate-800 mb-1">Boot the Gomoku Game Master</h3>
+                        <p class="text-sm text-slate-600 mb-3">Initialize the <code>gomoku_server</code>. This actor manages the game rules, turns, and interfaces with the Tuple Space.</p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-3" class="text-emerald-400 font-mono text-sm overflow-x-auto">gomoku_server:start_link().</pre>
+                            <button onclick="copyCode(this, 'code-3')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phase 2: Game Logic & State Management -->
+            <section>
+                <h2 class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-6 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-700 text-sm py-1 px-3 rounded-full mr-3">Phase 2</span>
+                    Testing Game Logic & State Validation
+                </h2>
+
+                <div class="space-y-8">
+                    <!-- Step 4 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-indigo-600 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">4</span>
+                        <h3 class="text-lg font-semibold text-slate-800 mb-1">Initialize the Board</h3>
+                        <p class="text-sm text-slate-600 mb-3">Demonstrates a massive asynchronous injection of tuples. The server generates 400 empty cells <code>{cell, X, Y, empty}</code> for the 20x20 grid.</p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-4" class="text-emerald-400 font-mono text-sm overflow-x-auto">gomoku_server:init_board().</pre>
+                            <button onclick="copyCode(this, 'code-4')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-indigo-600 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">5</span>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-1">Test State Protection (Wrong Turn)</h3>
+                            <span class="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-bold rounded">Expected: Error</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">
+                            <strong>Context for Report:</strong> The server's initial state assigns the first turn to Player 1. If Player 2 attempts a move, the <code>handle_call</code> callback must reject it, proving that state is strictly maintained in memory.
+                        </p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-5" class="text-emerald-400 font-mono text-sm overflow-x-auto">gomoku_server:make_move(player_2, 5, 5).</pre>
+                            <button onclick="copyCode(this, 'code-5')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                        <p class="text-sm font-mono text-rose-600 mt-2 bg-rose-50 px-3 py-2 rounded">Output: {error,not_your_turn}</p>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-indigo-600 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">6</span>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-1">Test Valid Move & Tuple Injection</h3>
+                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">Expected: Success</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3">
+                            <strong>Context for Report:</strong> Player 1 makes a valid move. The server accepts it, switches the active turn to Player 2, and forwards the move tuple to the Tuple Space via an asynchronous <code>out</code>.
+                        </p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-6" class="text-emerald-400 font-mono text-sm overflow-x-auto">gomoku_server:make_move(player_1, 5, 5).</pre>
+                            <button onclick="copyCode(this, 'code-6')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                        <p class="text-sm font-mono text-emerald-600 mt-2 bg-emerald-50 px-3 py-2 rounded">Output: {ok,move_accepted}</p>
+                    </div>
+
+                    <!-- Step 7 -->
+                    <div class="relative pl-12">
+                        <span class="absolute left-0 bg-indigo-600 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center shadow-sm">7</span>
+                        <h3 class="text-lg font-semibold text-slate-800 mb-1">Verify Tuple Space Status</h3>
+                        <p class="text-sm text-slate-600 mb-3">
+                            Uses a non-destructive read (<code>rd</code>) with wildcards to print the current state of the board, confirming the piece was successfully injected into the ETS table.
+                        </p>
+                        <div class="bg-slate-800 rounded-lg p-4 relative group shadow-inner">
+                            <pre id="code-7" class="text-emerald-400 font-mono text-sm overflow-x-auto">gomoku_server:print_board().</pre>
+                            <button onclick="copyCode(this, 'code-7')" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 px-3 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Copy to Clipboard Script -->
+    <script>
+        function copyCode(buttonElement, elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = codeText;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                const originalText = buttonElement.innerText;
+                buttonElement.innerText = "Copied!";
+                buttonElement.classList.replace('bg-slate-700', 'bg-emerald-600');
+                buttonElement.classList.replace('hover:bg-slate-600', 'hover:bg-emerald-500');
+                
+                setTimeout(() => {
+                    buttonElement.innerText = originalText;
+                    buttonElement.classList.replace('bg-emerald-600', 'bg-slate-700');
+                    buttonElement.classList.replace('hover:bg-emerald-500', 'hover:bg-slate-600');
+                }, 2000);
+            } catch (err) {
+                console.error('Fallback: Copy failed', err);
+                buttonElement.innerText = "Error!";
+            }
+            
+            document.body.removeChild(textArea);
+        }
+    </script>
+</body>
+</html>
