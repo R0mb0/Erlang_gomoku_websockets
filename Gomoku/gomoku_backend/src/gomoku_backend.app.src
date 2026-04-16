@@ -1,14 +1,19 @@
-{application, gomoku_backend, [
-    {description, "An OTP application"},
-    {vsn, "0.1.0"},
-    {registered, []},
-    {mod, {gomoku_backend_app, []}},
-    {applications, [
-        kernel,
-        stdlib
-    ]},
-    {env, []},
-    {modules, []},
-    {licenses, ["Apache-2.0"]},
-    {links, []}
+%% --- OTP Application Resource File ---
+%% This file tells the Erlang VM how to start our entire application.
+
+{application, gomoku_backend,
+ [{description, "Distributed Gomoku Engine with WebSockets"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  %% Tell the VM which module contains the startup logic
+  {mod, {gomoku_backend_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    %% We need to ensure Cowboy and JSX start before our app
+    cowboy,
+    jsx
+   ]},
+  {env,[]},
+  {modules, []}
  ]}.

@@ -1,37 +1,29 @@
-%%%-------------------------------------------------------------------
-%% @doc gomoku_backend top level supervisor.
-%% @end
-%%%-------------------------------------------------------------------
-
 -module(gomoku_backend_sup).
-
 -behaviour(supervisor).
 
--export([start_link/0]).
+-export([start_link/0, init/1]).
 
--export([init/1]).
-
--define(SERVER, ?MODULE).
-
+%% Starts the supervisor process
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-%% sup_flags() = #{strategy => strategy(),         % optional
-%%                 intensity => non_neg_integer(), % optional
-%%                 period => pos_integer()}        % optional
-%% child_spec() = #{id => child_id(),       % mandatory
-%%                  start => mfargs(),      % mandatory
-%%                  restart => restart(),   % optional
-%%                  shutdown => shutdown(), % optional
-%%                  type => worker(),       % optional
-%%                  modules => modules()}   % optional
+%% Initializes the supervisor and defines its children
 init([]) ->
-    SupFlags = #{
-        strategy => one_for_all,
-        intensity => 0,
-        period => 1
-    },
-    ChildSpecs = [],
-    {ok, {SupFlags, ChildSpecs}}.
+    %% strategy: one_for_one -> If a child dies, restart ONLY that child.
+    %% intensity: 5, period: 10 -> Allow max 5 crashes in 10 seconds before giving up.
+    SupFlags = #{strategy => one_for_one, intensity => 5, period => 10},
 
-%% internal functions
+    %% We define our two actors. The supervisor will start them automatically!
+    ChildSpecs = [
+        #{id => tuple_space,
+          start => {tuple_space, start_link, []},
+          restart => permanent, % Always restart it if it crashes
+          type => worker},
+
+        #{id => gomoku_server,
+          start => {gomoku_server, start_link, []},
+          restart => permanent,
+          type => worker}
+    ],
+
+    {ok, {SupFlags, ChildSpecs}}.
