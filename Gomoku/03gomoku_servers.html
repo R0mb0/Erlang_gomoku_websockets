@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku Engine - Phase 4 Tests</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        pre::-webkit-scrollbar { height: 8px; }
+        pre::-webkit-scrollbar-track { background: #2d3748; border-radius: 4px; }
+        pre::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <div class="bg-violet-700 p-8 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10"></div>
+            <div class="flex items-center gap-3 mb-2 relative z-10">
+                <svg class="w-8 h-8 text-violet-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                <h1 class="text-3xl font-bold">Phase 4: JSON Command Routing & Logic</h1>
+            </div>
+            <p class="text-violet-100 text-sm mt-2 max-w-3xl relative z-10">
+                This document verifies the capability of the WebSocket handler to decode JSON payloads, extract actionable commands, interact with the Erlang Game Master, and return strictly formatted JSON responses to the frontend.
+            </p>
+        </div>
+
+        <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <div class="lg:col-span-5 space-y-8">
+                <h2 class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-2 flex items-center">
+                    <span class="bg-violet-100 text-violet-700 text-sm py-1 px-3 rounded-full mr-3">Backend</span>
+                    Preparation
+                </h2>
+
+                <div class="relative pl-12">
+                    <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">1</span>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-1">Recompile & Boot</h3>
+                    <p class="text-sm text-slate-600 mb-3">Ensure your new WebSocket handler logic is compiled and running. Restart the shell.</p>
+                    <div class="bg-slate-800 rounded-lg p-4 shadow-inner">
+                        <pre class="text-emerald-400 font-mono text-sm">rebar3 shell</pre>
+                    </div>
+                </div>
+
+                <div class="relative pl-12">
+                    <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">2</span>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-1">Monitor the Erlang VM</h3>
+                    <p class="text-sm text-slate-600 mb-3">Leave the terminal open. As you execute the JSON tests on the right, you will see connection logs appearing in the console. The actual state transitions are now handled entirely via WebSockets!</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+                <h2 class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-2 flex items-center mb-4">
+                    <span class="bg-emerald-100 text-emerald-700 text-sm py-1 px-3 rounded-full mr-3">Frontend</span>
+                    JSON Payload Injector
+                </h2>
+                
+                <div class="flex gap-2 mb-6">
+                    <button id="btn-connect" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors w-full shadow-sm">Connect to ws://localhost:8080/ws</button>
+                    <button id="btn-disconnect" class="bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-4 rounded transition-colors hidden shadow-sm w-full">Disconnect</button>
+                </div>
+
+                <div id="test-actions" class="grid grid-cols-2 gap-3 mb-6 opacity-50 pointer-events-none transition-opacity">
+                    
+                    <div class="bg-white p-3 rounded border border-slate-300 shadow-sm">
+                        <button onclick='sendPayload({"action": "init_board"})' class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold py-2 rounded mb-2">Test A: Init Board</button>
+                        <p class="text-xs text-slate-500">Injects 400 empty tuples.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded border border-slate-300 shadow-sm">
+                        <button onclick='sendPayload({"action": "make_move", "player": "player_1", "x": 5, "y": 5})' class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2 rounded mb-2">Test B: Valid Move</button>
+                        <p class="text-xs text-slate-500">Player 1 plays at 5,5.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded border border-slate-300 shadow-sm">
+                        <button onclick='sendPayload({"action": "make_move", "player": "player_1", "x": 6, "y": 6})' class="w-full bg-amber-500 hover:bg-amber-400 text-white text-sm font-semibold py-2 rounded mb-2">Test C: Wrong Turn</button>
+                        <p class="text-xs text-slate-500">Player 1 tries playing twice.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded border border-slate-300 shadow-sm">
+                        <button onclick='ws.send("just a random string")' class="w-full bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold py-2 rounded mb-2">Test D: Invalid JSON</button>
+                        <p class="text-xs text-slate-500">Sends raw text, tests crash prevention.</p>
+                    </div>
+
+                </div>
+
+                <div class="flex-1 flex flex-col min-h-0">
+                    <label class="text-sm font-semibold text-slate-700 mb-1">WebSocket Log Stream:</label>
+                    <div id="ws-log" class="flex-1 bg-slate-900 rounded-lg p-4 overflow-y-auto font-mono text-sm space-y-3 shadow-inner">
+                        <div class="text-slate-500 italic">Waiting for connection...</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        const btnConnect = document.getElementById('btn-connect');
+        const btnDisconnect = document.getElementById('btn-disconnect');
+        const actionPanel = document.getElementById('test-actions');
+        const logContainer = document.getElementById('ws-log');
+
+        function appendLog(message, type, data = null) {
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString();
+            
+            let htmlContent = ``;
+            
+            if (type === 'system') {
+                htmlContent = `<span class="text-yellow-400">[${time}] ${message}</span>`;
+            } else if (type === 'sent') {
+                htmlContent = `<div class="text-blue-300 mb-1">[${time}] 📤 Sent Payload:</div>
+                               <pre class="bg-slate-800 p-2 rounded text-blue-100 text-xs">${JSON.stringify(data, null, 2)}</pre>`;
+            } else if (type === 'sent-raw') {
+                htmlContent = `<div class="text-blue-300 mb-1">[${time}] 📤 Sent Raw Text:</div>
+                               <pre class="bg-slate-800 p-2 rounded text-blue-100 text-xs">${message}</pre>`;
+            } else if (type === 'received') {
+                // Try to format JSON nicely
+                try {
+                    const parsed = JSON.parse(message);
+                    let colorClass = parsed.status === 'error' ? 'text-rose-400' : 'text-emerald-400';
+                    htmlContent = `<div class="${colorClass} mb-1">[${time}] 📥 Server Reply:</div>
+                                   <pre class="bg-slate-800 p-2 rounded ${colorClass} text-xs font-bold">${JSON.stringify(parsed, null, 2)}</pre>`;
+                } catch(e) {
+                    htmlContent = `<div class="text-emerald-400 mb-1">[${time}] 📥 Server Reply:</div>
+                                   <pre class="bg-slate-800 p-2 rounded text-emerald-200 text-xs">${message}</pre>`;
+                }
+            }
+            
+            div.innerHTML = htmlContent;
+            div.className = "border-l-2 border-slate-700 pl-2";
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function sendPayload(obj) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                appendLog('', 'sent', obj);
+                ws.send(JSON.stringify(obj));
+            }
+        }
+
+        // Intercept raw string send for Test D
+        const originalSend = WebSocket.prototype.send;
+        WebSocket.prototype.send = function(data) {
+            if (typeof data === 'string' && !data.startsWith('{')) {
+                appendLog(data, 'sent-raw');
+            }
+            originalSend.call(this, data);
+        };
+
+        btnConnect.addEventListener('click', () => {
+            if (logContainer.querySelector('.italic')) logContainer.innerHTML = ''; 
+            
+            appendLog('Attempting to connect to ws://localhost:8080/ws...', 'system');
+            
+            try {
+                ws = new WebSocket('ws://localhost:8080/ws');
+                
+                ws.onopen = () => {
+                    appendLog('SUCCESS: Connected. Real-time JSON bridge active.', 'system');
+                    btnConnect.classList.add('hidden');
+                    btnDisconnect.classList.remove('hidden');
+                    actionPanel.classList.remove('opacity-50', 'pointer-events-none');
+                };
+
+                ws.onmessage = (event) => {
+                    appendLog(event.data, 'received');
+                };
+
+                ws.onclose = () => {
+                    appendLog('DISCONNECTED: Socket closed.', 'system');
+                    btnConnect.classList.remove('hidden');
+                    btnDisconnect.classList.add('hidden');
+                    actionPanel.classList.add('opacity-50', 'pointer-events-none');
+                    ws = null;
+                };
+                
+                ws.onerror = (error) => {
+                    appendLog('ERROR: Could not connect. Is Rebar3 running?', 'system');
+                }
+            } catch (e) {
+                appendLog('Error: ' + e.message, 'system');
+            }
+        });
+
+        btnDisconnect.addEventListener('click', () => {
+            if (ws) ws.close();
+        });
+    </script>
+</body>
+</html>
