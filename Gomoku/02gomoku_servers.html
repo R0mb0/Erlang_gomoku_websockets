@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku Engine - Phase 3 Tests</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        pre::-webkit-scrollbar { height: 8px; }
+        pre::-webkit-scrollbar-track { background: #2d3748; border-radius: 4px; }
+        pre::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <div class="bg-blue-700 p-8 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10"></div>
+            <div class="flex items-center gap-3 mb-2 relative z-10">
+                <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <h1 class="text-3xl font-bold">Phase 3: Supervision & WebSockets</h1>
+            </div>
+            <p class="text-blue-100 text-sm mt-2 max-w-2xl relative z-10">
+                This document verifies the automatic startup of the Erlang Supervisor tree and tests the bidirectional JSON communication between the browser and the Cowboy WebSocket server.
+            </p>
+        </div>
+
+        <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <div class="space-y-8">
+                <h2 class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-2 flex items-center">
+                    <span class="bg-blue-100 text-blue-700 text-sm py-1 px-3 rounded-full mr-3">Backend</span>
+                    Erlang Console Tests
+                </h2>
+
+                <div class="relative pl-12">
+                    <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">1</span>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-1">Verify Auto-Boot</h3>
+                    <p class="text-sm text-slate-600 mb-3">Launch the shell. You should no longer need to call <code>start_link()</code> manually. Look for the <strong>===> Booted gomoku_backend</strong> message.</p>
+                    <div class="bg-slate-800 rounded-lg p-4">
+                        <pre class="text-emerald-400 font-mono text-sm">rebar3 shell</pre>
+                    </div>
+                </div>
+
+                <div class="relative pl-12">
+                    <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">2</span>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-1">Verify Supervisor Children</h3>
+                    <p class="text-sm text-slate-600 mb-3">Check if the Supervisor automatically started our actors. The <code>whereis</code> function should return a PID (Process ID) instead of <code>undefined</code>.</p>
+                    <div class="bg-slate-800 rounded-lg p-4">
+                        <pre class="text-emerald-400 font-mono text-sm">whereis(gomoku_server).</pre>
+                    </div>
+                </div>
+                
+                <div class="relative pl-12">
+                    <span class="absolute left-0 bg-slate-800 text-white font-bold rounded-full h-8 w-8 flex items-center justify-center">3</span>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-1">Observe Traffic</h3>
+                    <p class="text-sm text-slate-600 mb-3">Leave the terminal open. When you use the interactive tool on the right, you will see print statements appearing in the Erlang console confirming the reception of messages.</p>
+                </div>
+            </div>
+
+            <div class="space-y-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-2 flex items-center">
+                    <span class="bg-emerald-100 text-emerald-700 text-sm py-1 px-3 rounded-full mr-3">Frontend</span>
+                    Live WebSocket Tester
+                </h2>
+                
+                <p class="text-sm text-slate-600">Ensure your Erlang shell is running on Port 8080 before connecting.</p>
+
+                <div class="flex gap-2">
+                    <button id="btn-connect" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors w-full">Connect to ws://localhost:8080/ws</button>
+                    <button id="btn-disconnect" class="bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-4 rounded transition-colors hidden">Disconnect</button>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <input type="text" id="ws-input" placeholder="Type a message to Erlang..." class="flex-1 px-4 py-2 rounded border border-slate-300 focus:outline-none focus:border-emerald-500" disabled>
+                    <button id="btn-send" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded transition-colors disabled:opacity-50" disabled>Send</button>
+                </div>
+
+                <div class="mt-4">
+                    <label class="text-sm font-semibold text-slate-700">Communication Log:</label>
+                    <div id="ws-log" class="mt-1 h-64 bg-slate-900 rounded-lg p-4 overflow-y-auto font-mono text-sm space-y-2">
+                        <div class="text-slate-500 italic">Waiting for connection...</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        const btnConnect = document.getElementById('btn-connect');
+        const btnDisconnect = document.getElementById('btn-disconnect');
+        const btnSend = document.getElementById('btn-send');
+        const inputField = document.getElementById('ws-input');
+        const logContainer = document.getElementById('ws-log');
+
+        function appendLog(message, type) {
+            const div = document.createElement('div');
+            if (type === 'system') div.className = 'text-yellow-400';
+            else if (type === 'sent') div.className = 'text-blue-400';
+            else if (type === 'received') div.className = 'text-emerald-400 font-bold';
+            
+            const time = new Date().toLocaleTimeString();
+            div.textContent = `[${time}] ${message}`;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight; // Auto-scroll
+        }
+
+        btnConnect.addEventListener('click', () => {
+            if (logContainer.querySelector('.italic')) logContainer.innerHTML = ''; // Clear initial message
+            
+            appendLog('Attempting to connect to ws://localhost:8080/ws...', 'system');
+            
+            try {
+                ws = new WebSocket('ws://localhost:8080/ws');
+                
+                ws.onopen = () => {
+                    appendLog('SUCCESS: Connection established with Erlang/Cowboy!', 'system');
+                    btnConnect.classList.add('hidden');
+                    btnDisconnect.classList.remove('hidden');
+                    inputField.disabled = false;
+                    btnSend.disabled = false;
+                };
+
+                ws.onmessage = (event) => {
+                    appendLog(`Erlang replied: ${event.data}`, 'received');
+                };
+
+                ws.onclose = () => {
+                    appendLog('DISCONNECTED: Connection closed.', 'system');
+                    btnConnect.classList.remove('hidden');
+                    btnDisconnect.classList.add('hidden');
+                    inputField.disabled = true;
+                    btnSend.disabled = true;
+                    ws = null;
+                };
+                
+                ws.onerror = (error) => {
+                    appendLog('ERROR: Could not connect. Is Erlang running?', 'system');
+                }
+            } catch (e) {
+                appendLog('Error creating WebSocket: ' + e.message, 'system');
+            }
+        });
+
+        btnDisconnect.addEventListener('click', () => {
+            if (ws) ws.close();
+        });
+
+        function sendMessage() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const text = inputField.value;
+                if (text.trim() === '') return;
+                
+                ws.send(text);
+                appendLog(`You sent: ${text}`, 'sent');
+                inputField.value = '';
+            }
+        }
+
+        btnSend.addEventListener('click', sendMessage);
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
