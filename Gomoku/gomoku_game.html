@@ -177,25 +177,15 @@
                     document.querySelectorAll('.stone').forEach(s => s.className = 'stone');
                 } 
                 else if (response.status === "move_accepted") {
+                    // Visually place the stone
                     const stoneEl = document.getElementById(`stone-${response.x}-${response.y}`);
                     if (stoneEl) {
                         const colorClass = response.player === "player_1" ? "black" : "white";
                         stoneEl.className = `stone active ${colorClass}`;
                     }
-                }
-                else if (response.status === "win") {
-                    // Place the final winning stone
-                    const stoneEl = document.getElementById(`stone-${response.x}-${response.y}`);
-                    if (stoneEl) {
-                        const colorClass = response.player === "player_1" ? "black" : "white";
-                        stoneEl.className = `stone active ${colorClass}`;
-                    }
-                    
-                    // Announce the winner!
-                    const winnerName = response.player === "player_1" ? "Black (Player 1)" : "White (Player 2)";
-                    showToast(`🎉 ${winnerName} WINS THE GAME! 🎉`, "success");
                 }
                 else if (response.status === "error") {
+                    // Show Erlang errors nicely
                     let errMsg = "Error!";
                     if (response.reason === "not_your_turn") errMsg = "Not your turn!";
                     if (response.reason === "cell_occupied") errMsg = "Cell is already taken!";
