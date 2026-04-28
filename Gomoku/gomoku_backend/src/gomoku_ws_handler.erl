@@ -8,31 +8,37 @@ init(Req, State) ->
 
 websocket_init(State) ->
     io:format("~n[WebSocket] Player connected to the arena!~n"),
+    %% Aggiungiamo questo Processo (self()) al gruppo globale 'gomoku_arena'
+    pg:join(gomoku_arena, self()),
     {ok, State}.
 
 %% Handle incoming TEXT/JSON messages from the browser
 websocket_handle({text, Msg}, State) ->
-    %% 1. Decode the incoming JSON into an Erlang Map
     try jsx:decode(Msg, [return_maps]) of
         CommandMap ->
-            %% 2. Extract the "action" field to know what the user wants to do
             Action = maps:get(<<"action">>, CommandMap, <<"unknown">>),
-            
-            %% 3. Process the command and get a response Map
             ResponseMap = process_command(Action, CommandMap),
-            
-            %% 4. Encode the response back to JSON and send it
             JsonResponse = jsx:encode(ResponseMap),
-            {reply, {text, JsonResponse}, State}
+            
+            %% NOVITÀ: Invece di rispondere solo a chi ha scritto,
+            %% prendiamo tutti i PID nel gruppo e mandiamo loro un messaggio Erlang interno!
+            Pids = pg:get_members(gomoku_arena),
+            lists:foreach(fun(Pid) -> Pid ! {broadcast, JsonResponse} end, Pids),
+            
+            %% Diciamo a Cowboy che per ora è tutto ok (non replichiamo direttamente al volo)
+            {ok, State}
     catch
         _:_ ->
-            %% If the frontend sends invalid JSON, don't crash, just return an error
+            %% In caso di errore JSON, rispondiamo privatamente a chi ha sbagliato
             ErrorJson = jsx:encode(#{<<"status">> => <<"error">>, <<"reason">> => <<"invalid_json">>}),
             {reply, {text, ErrorJson}, State}
     end;
 
 websocket_handle(_Data, State) ->
     {ok, State}.
+
+websocket_info({broadcast, JsonMessage}, State) ->
+    {reply, {text, JsonMessage}, State};
 
 websocket_info(_Info, State) ->
     {ok, State}.

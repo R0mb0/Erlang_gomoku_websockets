@@ -4,6 +4,7 @@
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
+       pg:start_link(),
     %% 1. Define Cowboy Routes. Traffic to ws://localhost:8080/ws goes to gomoku_ws_handler
     Dispatch = cowboy_router:compile([
         {'_', [
