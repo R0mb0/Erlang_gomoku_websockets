@@ -82,13 +82,20 @@
                 <button id="btn-connect" class="ml-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1 px-3 rounded transition-colors">Connect</button>
             </div>
             
-            <div class="flex items-center gap-3 mt-2 pt-2 border-t border-slate-600">
-                <span class="text-sm font-semibold">Play as:</span>
-                <select id="player-selector" class="bg-slate-800 text-sm border border-slate-500 rounded px-2 py-1 focus:outline-none focus:border-emerald-500">
-                    <option value="player_1">Player 1 (Black)</option>
-                    <option value="player_2">Player 2 (White)</option>
-                </select>
-                <button id="btn-init" class="ml-auto bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-1 px-3 rounded transition-colors disabled:opacity-50">Init Board</button>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-600">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold">Play as:</span>
+                    <select id="player-selector" class="bg-slate-800 text-sm border border-slate-500 rounded px-2 py-1 focus:outline-none focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
+                        <option value="player_1">Player 1 (Black)</option>
+                        <option value="player_2">Player 2 (White)</option>
+                    </select>
+                </div>
+                
+                <div id="turn-display" class="bg-slate-600 text-white text-xs font-bold py-1 px-3 rounded-full shadow-sm border border-slate-500">
+                    Waiting to start...
+                </div>
+                
+                <button id="btn-init" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-1 px-3 rounded transition-colors disabled:opacity-50">Init Board</button>
             </div>
         </div>
     </div>
@@ -110,6 +117,22 @@
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
         const toast = document.getElementById('toast');
+        const turnDisplay = document.getElementById('turn-display');
+        let myPlayerRole = null;
+
+        playerSelector.addEventListener('change', () => {
+            myPlayerRole = playerSelector.value;
+        });
+
+        function updateTurnDisplay(playerTurn) {
+            if (playerTurn === "player_1") {
+                turnDisplay.textContent = "Turn: Player 1 (Black)";
+                turnDisplay.className = "bg-slate-900 text-white text-xs font-bold py-1 px-3 rounded-full shadow-md border border-slate-500 animate-pulse";
+            } else {
+                turnDisplay.textContent = "Turn: Player 2 (White)";
+                turnDisplay.className = "bg-slate-100 text-slate-800 text-xs font-bold py-1 px-3 rounded-full shadow-md border border-slate-400 animate-pulse";
+            }
+        }
 
         // Show a temporary message
         function showToast(message, type = 'error') {
@@ -141,10 +164,14 @@
                             showToast("Not connected to server!");
                             return;
                         }
-                        const currentPlayer = playerSelector.value;
+                        
+                        if (!myPlayerRole) {
+                            myPlayerRole = playerSelector.value;
+                        }
+
                         const payload = {
                             action: "make_move",
-                            player: currentPlayer,
+                            player: myPlayerRole,
                             x: x,
                             y: y
                         };
@@ -173,19 +200,40 @@
                 
                 if (response.status === "board_initialized") {
                     showToast("Board Reset!", "success");
-                    // Clear all stones visually
                     document.querySelectorAll('.stone').forEach(s => s.className = 'stone');
+                    
+                    // Ui for new game
+                    updateTurnDisplay("player_1");
+                    myPlayerRole = null; // Reset
+                    playerSelector.disabled = false; // unlock stones
                 } 
                 else if (response.status === "move_accepted") {
-                    // Visually place the stone
+                    // 1. Drawing stone
                     const stoneEl = document.getElementById(`stone-${response.x}-${response.y}`);
                     if (stoneEl) {
                         const colorClass = response.player === "player_1" ? "black" : "white";
                         stoneEl.className = `stone active ${colorClass}`;
                     }
+
+                    // 2. update next turn player
+                    const nextPlayer = response.player === "player_1" ? "player_2" : "player_1";
+                    updateTurnDisplay(nextPlayer);
+
+                    // 3. The magick block :) 
+                    if (!myPlayerRole) {
+                        // If somenone make the first move
+                        // Assigning player 2 to other player
+                        myPlayerRole = response.player === "player_1" ? "player_2" : "player_1";
+                        playerSelector.value = myPlayerRole;
+                        playerSelector.disabled = true;
+                        showToast("Auto-assigned as " + playerSelector.options[playerSelector.selectedIndex].text, "success");
+                    } else {
+                        // The tent must be locked in teh correct player
+                        playerSelector.value = myPlayerRole;
+                        playerSelector.disabled = true;
+                    }
                 }
                 else if (response.status === "error") {
-                    // Show Erlang errors nicely
                     let errMsg = "Error!";
                     if (response.reason === "not_your_turn") errMsg = "Not your turn!";
                     if (response.reason === "cell_occupied") errMsg = "Cell is already taken!";
