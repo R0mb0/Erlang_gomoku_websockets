@@ -70,6 +70,12 @@ process_command(<<"make_move">>, Map) ->
               <<"player">> => PlayerBin, 
               <<"x">> => X, 
               <<"y">> => Y};
+
+        {ok, {game_over, WinnerAtom}} ->
+            #{<<"status">> => <<"game_over">>, 
+              <<"player">> => erlang:atom_to_binary(WinnerAtom, utf8), 
+              <<"x">> => X, 
+              <<"y">> => Y};
               
         {error, Reason} ->
             %% If it's not our turn or out of bounds, convert the atom error to binary for JSON

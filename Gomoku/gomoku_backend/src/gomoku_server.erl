@@ -9,7 +9,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% The state of the game. For now, it just keeps track of whose turn it is.
--record(state, {current_turn = player_1}).
+-record(state, {current_turn = player_1, board = #{}}).
 
 %% ====================================================================
 %% API Functions
@@ -42,39 +42,34 @@ print_board() ->
 %% ====================================================================
 
 init([]) ->
-    %% When the game starts, it's player 1's turn.
-    {ok, #state{current_turn = player_1}}.
+    {ok, #state{current_turn = player_1, board = #{}}}.
 
 %% Handling synchronous moves
 handle_call({make_move, Player, X, Y}, _From, State) ->
-    %% 1. Check if it's the correct player's turn
+    Board = State#state.board,
     if 
         Player =/= State#state.current_turn ->
             {reply, {error, not_your_turn}, State};
-        %% 2. Check if coordinates are within the 20x20 bounds
         X < 1 orelse X > 20 orelse Y < 1 orelse Y > 20 ->
             {reply, {error, out_of_bounds}, State};
+        %% Preveniamo sovrascritture guardando la nostra mappa veloce
+        is_map_key({X, Y}, Board) ->
+            {reply, {error, cell_occupied}, State};
         true ->
-            %% 3. Try to take the 'empty' cell from the Tuple Space.
-            %% Since 'in' is blocking, if the cell is already taken (no 'empty' tuple),
-            %% this process would hang! 
-            %% To prevent hanging the whole server on invalid moves, we should theoretically 
-            %% use a non-blocking check first, or timeout. For this PoC, we assume the frontend
-            %% won't allow clicking taken cells, but let's add a quick check with 'rd' first 
-            %% to be safe.
-            
-            %% Actually, let's keep it simple for the PoC:
-            %% We inject the player's piece directly. The tuple space will hold it.
-            %% We are bypassing the strict "consume empty cell" for now to keep the code short,
-            %% we just overwrite/add the move.
+            %% 1. Scriviamo nel Tuple Space come richiesto dall'architettura
             tuple_space:out({cell, X, Y, Player}),
             
-            %% Switch turn
-            NextTurn = switch_turn(Player),
+            %% 2. Aggiorniamo la mappa locale
+            NewBoard = maps:put({X, Y}, Player, Board),
             
-            %% In a real scenario, here we would also call check_win(X, Y, Player)
-            
-            {reply, {ok, move_accepted}, State#state{current_turn = NextTurn}}
+            %% 3. Controlliamo se questa mossa scatena una vittoria
+            case check_win(X, Y, Player, NewBoard) of
+                true ->
+                    {reply, {ok, {game_over, Player}}, State#state{board = NewBoard}};
+                false ->
+                    NextTurn = switch_turn(Player),
+                    {reply, {ok, move_accepted}, State#state{current_turn = NextTurn, board = NewBoard}}
+            end
     end;
 
 handle_call(_Request, _From, State) ->
@@ -85,7 +80,8 @@ handle_cast(init_board, State) ->
     %% Loop to create 20x20 = 400 empty cells
     [tuple_space:out({cell, X, Y, empty}) || X <- lists:seq(1, 20), Y <- lists:seq(1, 20)],
     io:format("Board initialized with 400 empty cells in Tuple Space.~n"),
-    {noreply, State#state{current_turn = player_1}};
+    %% Azzeriamo anche la nostra mappa locale per i controlli veloci!
+    {noreply, State#state{current_turn = player_1, board = #{}}};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -105,3 +101,22 @@ code_change(_OldVsn, State, _Extra) ->
 
 switch_turn(player_1) -> player_2;
 switch_turn(player_2) -> player_1.
+
+%% --- Algoritmo di Vittoria a Raggiera ---
+check_win(X, Y, Player, Board) ->
+    %% Controlliamo asse Orizzontale, Verticale, e le due Diagonali
+    Directions = [{1, 0}, {0, 1}, {1, 1}, {1, -1}],
+    lists:any(fun({Dx, Dy}) ->
+        %% Contiamo le pedine in un verso e in quello diametralmente opposto
+        Count = 1 + count_directional(X, Y, Dx, Dy, Player, Board) +
+                    count_directional(X, Y, -Dx, -Dy, Player, Board),
+        Count >= 5
+    end, Directions).
+
+count_directional(X, Y, Dx, Dy, Player, Board) ->
+    NextX = X + Dx,
+    NextY = Y + Dy,
+    case maps:get({NextX, NextY}, Board, empty) of
+        Player -> 1 + count_directional(NextX, NextY, Dx, Dy, Player, Board);
+        _ -> 0 %% Ci fermiamo appena troviamo una cella vuota, il bordo o l'avversario
+    end.

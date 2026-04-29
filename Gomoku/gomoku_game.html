@@ -233,6 +233,21 @@
                         playerSelector.disabled = true;
                     }
                 }
+                else if (response.status === "game_over") {
+                    // Disegniamo l'ultima pedina vincente
+                    const stoneEl = document.getElementById(`stone-${response.x}-${response.y}`);
+                    if (stoneEl) {
+                        const colorClass = response.player === "player_1" ? "black" : "white";
+                        stoneEl.className = `stone active ${colorClass} shadow-[0_0_15px_rgba(255,215,0,0.8)]`; // Effetto dorato
+                    }
+                    
+                    updateTurnDisplay(response.player);
+                    turnDisplay.textContent = "🏆 WINNER: " + (response.player === "player_1" ? "Player 1!" : "Player 2!");
+                    turnDisplay.className = "bg-amber-400 text-slate-900 text-xs font-bold py-1 px-3 rounded-full shadow-lg border border-amber-500 animate-bounce";
+                    
+                    showToast("🎉 GAME OVER! " + response.player + " wins! 🎉", "success");
+                    playerSelector.disabled = true; // Blocchiamo tutto
+                }
                 else if (response.status === "error") {
                     let errMsg = "Error!";
                     if (response.reason === "not_your_turn") errMsg = "Not your turn!";
