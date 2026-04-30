@@ -1,8 +1,7 @@
-# Erlang_gomoku_websockets
-A real-time Five-in-a-Row (Gomoku) web game powered by an Erlang backend. It implements the Linda Tuple Space model to elegantly handle distributed state, race conditions, and multiplayer matchmaking via WebSockets.
+Urbino`s University - Computing and digital innovation - Distributed Applications and Cloud Computing
 
 <div align="center">
-  <h1>♟️ Erlang Gomoku Arena 🌐</h1>
+  <h1>♟️ Erlang Gomoku Websockets 🌐</h1>
 
   [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8ae9cfa09c634094b1d150bf45ea572f)](https://app.codacy.com/gh/R0mb0/Erlang_gomoku_websockets/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
   [![pages-build-deployment](https://github.com/R0mb0/Erlang_gomoku_websockets/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/R0mb0/Erlang_gomoku_websockets/actions/workflows/pages/pages-build-deployment)
