@@ -1,0 +1,174 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage[pdftex]{graphicx}
+\usepackage[svgnames]{xcolor}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[many]{tcolorbox}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{appendix}
+\usepackage{fancyhdr}
+\usepackage{titling}
+\usepackage{authblk}
+\usepackage{listings}
+
+% Setup per lo stile dei blocchi di codice
+\lstset{
+    backgroundcolor=\color{WhiteSmoke},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    keywordstyle=\color{NavyBlue}\bfseries,
+    stringstyle=\color{ForestGreen},
+    commentstyle=\color{Gray}\itshape,
+    numbers=none,
+    frame=single,
+    rulecolor=\color{LightGray},
+    tabsize=2,
+    showstringspaces=false
+}
+
+\title{\color{FireBrick}\bf{Erlang Gomoku Websockets \\ Un motore multiplayer distribuito basato su Tuple Space e WebSockets}}
+\author[1]{\color{FireBrick}\bf{Francesco Rombaldoni}}
+
+\affil[1]{francesco.rombaldoni@campus.uniurb.it}
+
+\date{\today}
+
+\begin{document}
+\fancypagestyle{firstpage}
+{
+    \fancyhead[L]{\footnotesize{\bf{Universit\`a degli Studi di Urbino Carlo Bo}}}
+	\fancyhead[R]{\footnotesize{\bf{CdL Magistrale Informatica e Innovazione Digitale}}}
+}
+\thispagestyle{firstpage}
+
+\pagestyle{fancy}
+
+\fancyhead{} % clear all header fields
+\fancyhead[L]{\color{Black}{\footnotesize{\thetitle}}}
+\fancyfoot{} % clear all footer fields
+\fancyfoot[R]{\footnotesize{\bf{\thepage}}}
+\fancyfoot[L]{\footnotesize{\bf{Progetto di: APPLICAZIONI DISTRIBUITE E CLOUD COMPUTING }}}
+
+\twocolumn
+
+%------------------------------------------
+%                   Title
+%------------------------------------------
+[{
+\maketitle
+\thispagestyle{firstpage}
+%------------------------------------------
+%                   Abstract
+%------------------------------------------
+\normalsize
+\begin{tcolorbox}[colback=WhiteSmoke, width=\linewidth, arc=1mm, auto outer arc]
+\section*{Riassunto}
+Questo documento illustra la progettazione e lo sviluppo di \textbf{Erlang Gomoku Arena}, un motore di gioco multiplayer distribuito in tempo reale per il gioco del Gomoku (Cinque di fila). Il sistema \`e stato interamente sviluppato in \textbf{Erlang/OTP}, sfruttando l'architettura \textit{Linda Tuple Space} per la gestione disaccoppiata dello stato e librerie moderne come \textit{Cowboy} per la comunicazione bidirezionale tramite WebSockets. Particolare attenzione \`e stata dedicata alla prevenzione dei \textit{deadlock} nel Tuple Space attraverso un'ibridazione dello stato con strutture dati locali a tempo di accesso costante $O(1)$, all'implementazione di un meccanismo di broadcasting distribuito tramite \textit{Process Groups} (\texttt{pg}) e a una logica frontend \textit{event-driven} reattiva e anti-cheat.
+\end{tcolorbox}
+\vspace{1.5ex}
+}]
+
+%------------------------------------------
+%                   Main Matter
+%------------------------------------------
+
+\section{Introduzione}
+La progettazione di sistemi distribuiti e interattivi richiede un'attenta gestione della concorrenza, della sincronizzazione dello stato e della fault tolerance. Il gioco del Gomoku, noto anche come ``Cinque di fila'', si presta perfettamente come caso di studio per la modellazione di un sistema multi-utente e reattivo. 
+
+L'obiettivo di questo progetto \`e la realizzazione di un server di gioco concorrente in cui pi\`u giocatori possano connettersi simultaneamente, visualizzare i cambiamenti di stato in tempo reale e interagire senza rischio di collisioni o colli di bottiglia. La scelta \`e ricaduta su \textbf{Erlang}, linguaggio intrinsecamente orientato alla concorrenza basata sul modello ad attori \cite{erlangOTP}. L'architettura prevede un backend basato sui comportamenti \texttt{gen\_server} di OTP, unito al paradigma di coordinamento \textit{Linda} \cite{gelernter1985generative} tramite un Tuple Space condiviso.
+
+\section{Architettura e Scelte Progettuali}
+
+\subsection{Il Modello Linda e il Tuple Space}
+Il nucleo della persistenza logica \`e basato su un \textbf{Tuple Space}. Nel modello Linda originale, i processi non comunicano direttamente tra loro, ma emettono, leggono o consumano tuple in uno spazio condiviso, garantendo un forte disaccoppiamento spaziale e temporale.
+Nel nostro progetto, ogni mossa viene immessa nello spazio sotto forma di tupla: \texttt{\{cell, X, Y, Player\}}. Questo approccio garantisce che lo storico della partita sia persistente, immutabile e interrogabile asincronamente.
+
+\subsection{Ibridazione e Prevenzione Deadlock}
+L'utilizzo puro del Tuple Space presenta un'insidia bloccante. Operazioni come \texttt{in} (consumo) e \texttt{rd} (lettura) sono nativamente bloccanti in Erlang se la tupla cercata non esiste. Se un client richiedesse di piazzare una pedina e il server usasse un \texttt{in} per prelevare una tupla \texttt{empty} che non \`e presente (poich\'e la cella \`e gi\`a occupata), il \texttt{gen\_server} subirebbe un \textit{deadlock}, congelando l'intero motore di gioco.
+
+Per risolvere elegantemente questo problema, si \`e optato per una \textbf{architettura ibrida}. La fonte di verit\`a rimane il Tuple Space, ma lo stato del \texttt{gen\_server} memorizza parallelamente una \texttt{Map} (dizionario Hash) di tutte le mosse effettuate. Questo permette al server di validare la legalit\`a di una mossa in tempo costante $O(1)$, proteggendo i processi da attese infinite.
+
+\subsection{Broadcasting con Process Groups}
+Un'altra sfida architetturale \`e stata la simulazione di una ``stanza'' multiplayer reale, dove una singola azione viene propagata a tutti i nodi connessi. Invece di far interrogare ripetutamente il server ai client (polling), abbiamo sfruttato il modulo nativo \textbf{\texttt{pg}} (Process Groups) di Erlang. Ogni connessione WebSocket viene inserita in un gruppo globale \texttt{gomoku\_arena}, e ogni mossa validata genera un evento di \textit{broadcast} asincrono verso tutti i PID (Process Identifiers) iscritti.
+
+\section{Implementazione e Flusso}
+
+\subsection{Inizializzazione e WebSockets}
+Il server HTTP/WebSocket \`e gestito dalla libreria \textbf{Cowboy} \cite{cowboy}. Quando un client si connette, l'handler WebSocket si iscrive immediatamente all'arena:
+\begin{lstlisting}[language=Erlang, caption=Iscrizione al Process Group]
+websocket_init(State) ->
+    %% Iscrizione al gruppo globale 'gomoku_arena'
+    pg:join(gomoku_arena, self()),
+    {ok, State}.
+\end{lstlisting}
+Ogni messaggio in arrivo dal frontend \`e in formato JSON, decodificato tramite la libreria \texttt{jsx}.
+
+\subsection{Gestione Sicura delle Mosse}
+Il \texttt{gomoku\_server} analizza ogni richiesta valutando prima la Mappa di stato per evitare sovrascritture, e successivamente popolando il Tuple Space.
+
+\begin{lstlisting}[language=Erlang, caption=Validazione O(1) e aggiornamento Tuple Space]
+handle_call({make_move, Player, X, Y}, _From, State) ->
+    Board = State#state.board,
+    if 
+        Player =/= State#state.current_turn ->
+            {reply, {error, not_your_turn}, State};
+        %% Validazione istantanea senza blocchi
+        is_map_key({X, Y}, Board) ->
+            {reply, {error, cell_occupied}, State};
+        true ->
+            %% Architettura Linda
+            tuple_space:out({cell, X, Y, Player}),
+            %% Ottimizzazione Mappa locale
+            NewBoard = maps:put({X, Y}, Player, Board),
+            ...
+\end{lstlisting}
+
+\subsection{Algoritmo di Vittoria a Raggiera}
+Scansionare l'intera matrice 20x20 dopo ogni mossa \`e computazionalmente oneroso. Si \`e progettato quindi un algoritmo di ricerca radiale ricorsivo. Esso parte dalla coordinata della mossa appena inserita e calcola la continuit\`a della riga in 4 direzioni cardinali/diagonali, arrestandosi immediatamente se incontra ostacoli o limiti della mappa.
+
+\begin{lstlisting}[language=Erlang, caption=Algoritmo di scansione radiale direzionale]
+check_win(X, Y, Player, Board) ->
+    Directions = [{1, 0}, {0, 1}, {1, 1}, {1, -1}],
+    lists:any(fun({Dx, Dy}) ->
+        Count = 1 + 
+          count_dir(X,Y,Dx,Dy,Player,Board) +
+          count_dir(X,Y,-Dx,-Dy,Player,Board),
+        Count >= 5
+    end, Directions).
+\end{lstlisting}
+
+\subsection{Frontend Event-Driven e UX}
+Il lato client in HTML/JS non si limita a disegnare la scacchiera, ma implementa logiche per evitare interazioni illecite (\textit{Anti-Cheat}). Mantiene in memoria l'identit\`a del giocatore, bloccando selettivamente i menu a tendina se il ruolo \`e gi\`a stato rivendicato in modo organico.
+
+\section{Risultati e Valutazione}
+I test effettuati sull'applicazione hanno evidenziato una comunicazione a latenza trascurabile (millisecondi) per il passaggio dei messaggi Erlang-JavaScript tramite JSON. 
+La robustezza \`e garantita dall'albero di supervisione di OTP. Errori dovuti a JSON malformati o payload inaspettati (\textit{crash test}) vengono catturati isolatamente all'interno del processo Cowboy associato al singolo client, proteggendo il server centrale (\texttt{gomoku\_server}) e il resto dei giocatori da eventuali interruzioni di servizio.
+
+\section{Conclusioni}
+Erlang Gomoku Arena dimostra concretamente l'efficacia del paradigma ad attori per applicazioni web interattive ad alto parallelismo. L'integrazione di concetti teorici (come il Linda Tuple Space) con soluzioni di ingegneria pragmatica (Mappe hash per evitare deadlock e pg per broadcast pub/sub) ha permesso la creazione di un motore efficiente e fault-tolerant.
+Tra gli sviluppi futuri ipotizzabili figura l'estensione verso l'uso di Mnesia (il DBMS distribuito di Erlang) in sostituzione del Tuple Space puro, e l'aggiunta di nodi Erlang distribuiti fisicamente per il bilanciamento del carico.
+
+\section{Contributi}
+Il progetto, il design dell'architettura e l'implementazione completa (Backend Erlang e Frontend Javascript/Tailwind) sono stati interamente pensati, progettati e codificati dallo studente autore della relazione.
+
+\begin{thebibliography}{9}
+\bibitem{erlangOTP}
+Ericsson AB, \textit{Erlang/OTP Reference Manual}, 2024. [Online]. Disponibile: \url{https://www.erlang.org/doc/}
+
+\bibitem{gelernter1985generative}
+D. Gelernter, \textit{Generative communication in Linda}, ACM Transactions on Programming Languages and Systems (TOPLAS), vol. 7, no. 1, pp. 80-112, 1985.
+
+\bibitem{cowboy}
+L. Hoguin (Nine Nines), \textit{Cowboy User Guide}, 2024. [Online]. Disponibile: \url{https://ninenines.eu/docs/en/cowboy/2.11/guide/}
+
+\end{thebibliography}
+
+\end{document}
