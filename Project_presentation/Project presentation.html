@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guida alla Presentazione del Progetto: Erlang Gomoku Arena</title>
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #334155;
+            --text-dark: #0f172a;
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --accent: #06b6d4;
+            --code-bg: #1e293b;
+            --code-text: #f8fafc;
+            --border: #e2e8f0;
+            --speech-bg: #f0fdf4;
+            --speech-border: #bbf7d0;
+            --speech-text: #166534;
+            --warn-bg: #fff7ed;
+            --warn-border: #fed7aa;
+            --warn-text: #9a3412;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e1e38 0%, #4f46e5 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Navbar / Indice rapido */
+        .nav-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .nav-box h3 {
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 6px;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+        }
+
+        .nav-grid a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .nav-grid a:hover {
+            background-color: var(--primary-light);
+        }
+
+        /* Sezioni della Guida */
+        .section-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .section-card h2 {
+            color: var(--text-dark);
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        .section-card h3 {
+            color: var(--text-dark);
+            font-size: 1.2rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        /* Blocchi di codice */
+        .code-container {
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+
+        .code-header {
+            background-color: #0f172a;
+            color: #94a3b8;
+            padding: 10px 16px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #334155;
+        }
+
+        .code-header .file-name {
+            color: #f8fafc;
+            font-weight: bold;
+        }
+
+        .code-header .line-ref {
+            background-color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #cbd5e1;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* Evidenziazione sintassi Erlang base simulata */
+        .keyword { color: #f43f5e; font-weight: bold; }
+        .atom { color: #38bdf8; }
+        .variable { color: #fbbf24; }
+        .comment { color: #64748b; font-style: italic; }
+        .string { color: #34d399; }
+
+        /* Blocchi Discorso Pronto e Domande */
+        .box-speech {
+            background-color: var(--speech-bg);
+            border-left: 4px solid var(--speech-border);
+            color: var(--speech-text);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .box-speech strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.05rem;
+            color: #14532d;
+        }
+
+        .box-warn {
+            background-color: var(--warn-bg);
+            border-left: 4px solid var(--warn-border);
+            color: var(--warn-text);
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .box-warn strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.05rem;
+            color: #7c2d12;
+        }
+
+        .highlight-text {
+            background-color: #fef08a;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #854d0e;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            background-color: var(--bg-card);
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Erlang Gomoku Arena</h1>
+    </header>
+
+    <div class="container">
+
+        <!-- Indice Rapido delle Sezioni -->
+        <div class="nav-box">
+            <h3>Indice Rapido delle Sezioni</h3>
+            <div class="nav-grid">
+                <a href="#intro">1. Introduzione</a>
+                <a href="#tuple_space">2. Il Tuple Space (Persistenza Linda)</a>
+                <a href="#gomoku_server">3. Il Server di Gioco (Ibridazione Stato)</a>
+                <a href="#win_algorithm">4. Algoritmo di Vittoria Radiale</a>
+                <a href="#communication">5. Cowboy WebSockets & Broadcast</a>
+                <a href="#supervisor">6. Albero di Supervisione & Resilienza</a>
+                <a href="#frontend">7. Frontend & Logiche Anti-Cheat</a>
+            </div>
+        </div>
+
+        <!-- Sezione 1: Strategia Globale -->
+        <div id="intro" class="section-card">
+            <h2>1. Introduzione</h2>
+            
+
+            <h3>Il progetto in 3 concetti chiave:</h3>
+            <ol>
+                <li><strong>Architettura ad Attori e Disaccoppiamento:</strong> Il sistema è diviso in entità concorrenti isolate (i processi Erlang) che comunicano esclusivamente tramite scambio di messaggi asincroni.</li>
+                <li><strong>Coordinamento Generativo (Modello Linda):</strong> Lo stato fondamentale di persistenza delle mosse non è un database tradizionale, ma un <em>Tuple Space</em> centralizzato implementato tramite tabelle ETS in-memory.</li>
+                <li><strong>Ibridazione Pragmatica:</strong> Per superare i limiti intrinseci di blocco del modello Linda (che causerebbero deadlock dei server), abbiamo fuso lo spazio delle tuple con uno stato locale del server a tempo di accesso costante $O(1)$.</li>
+            </ol>
+        </div>
+
+        <!-- Sezione 2: Tuple Space -->
+        <div id="tuple_space" class="section-card">
+            <h2>2. Il Cuore della Persistenza: tuple_space.erl</h2>
+            <p>Il file <code class="file-name">tuple_space.erl</code> implementa un comportamento <code class="atom">gen_server</code> che incapsula una tabella <strong>ETS (Erlang Term Storage)</strong> di tipo <code class="atom">duplicate_bag</code>. Questo server mette a disposizione le primitive fondamentali di Linda: <code class="keyword">out</code> (scrittura), <code class="keyword">in</code> (lettura distruttiva bloccante) e <code class="keyword">rd</code> (lettura non distruttiva bloccante).</p>
+            <p>La parte più pregiata ed elegante di questo file è la <strong>gestione della coda dei processi in attesa (<code class="variable">Waiting</code>)</strong>. Se un processo richiede una tupla con <code class="keyword">in</code> o <code class="keyword">rd</code> e questa non è presente, il server non risponde subito, ma "parcheggia" il client salvando il suo identificativo di chiamata (<code class="variable">From</code>). Quando arriva una nuova tupla tramite <code class="keyword">out</code>, il server scansiona la coda e sblocca i client interessati.</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="file-name">tuple_space.erl</span>
+                    <span class="line-ref">Funzione Interna: process_waiting/3</span>
+                </div>
+                <pre><code><span class="comment">%% Scansiona la coda dei processi bloccati in attesa di una tupla coincidente</span>
+<span class="keyword">process_waiting</span>([], _Store, <span class="variable">Acc</span>) ->
+    lists:<span class="keyword">reverse</span>(<span class="variable">Acc</span>);
+<span class="keyword">process_waiting</span>([{<span class="variable">Type</span>, <span class="variable">Pattern</span>, <span class="variable">From</span>} | <span class="variable">Rest</span>], <span class="variable">Store</span>, <span class="variable">Acc</span>) ->
+    <span class="keyword">case</span> ets:<span class="keyword">match_object</span>(<span class="variable">Store</span>, <span class="variable">Pattern</span>) <span class="keyword">of</span>
+        [<span class="variable">Tuple</span> | _] <span class="keyword">when</span> <span class="variable">Type</span> =:= <span class="atom">in</span> ->
+            <span class="comment">%% Trovata per il consumo: cancella la tupla e rispondi manualmente per sbloccare il client</span>
+            ets:<span class="keyword">delete_object</span>(<span class="variable">Store</span>, <span class="variable">Tuple</span>),
+            gen_server:<span class="keyword">reply</span>(<span class="variable">From</span>, <span class="variable">Tuple</span>),
+            <span class="keyword">process_waiting</span>(<span class="variable">Rest</span>, <span class="variable">Store</span>, <span class="variable">Acc</span>);
+        [<span class="variable">Tuple</span> | _] <span class="keyword">when</span> <span class="variable">Type</span> =:= <span class="atom">rd</span> ->
+            <span class="comment">%% Trovata per la sola lettura: rispondi ma mantieni la tupla nell'ETS</span>
+            gen_server:<span class="keyword">reply</span>(<span class="variable">From</span>, <span class="variable">Tuple</span>),
+            <span class="keyword">process_waiting</span>(<span class="variable">Rest</span>, <span class="variable">Store</span>, <span class="variable">Acc</span>);
+        [] ->
+            <span class="comment">%% Nessun match corrente: il client rimane in coda</span>
+            <span class="keyword">process_waiting</span>(<span class="variable">Rest</span>, <span class="variable">Store</span>, [<span class="variable">Acc</span> | {<span class="variable">Type</span>, <span class="variable">Pattern</span>, <span class="variable">From</span>}])
+    <span class="keyword">end</span>.</code></pre>
+            </div>
+        </div>
+
+        <!-- Sezione 3: Gomoku Server -->
+        <div id="gomoku_server" class="section-card">
+            <h2>3. Il Server di Gioco: gomoku_server.erl</h2>
+            <p>Il file <code class="file-name">gomoku_server.erl</code> gestisce lo stato ad alto livello del gioco (il turno corrente, l'avvenuta vittoria e la validazione). </p>
+            <p><strong>L'inghippo dei Deadlock risolto:</strong> Se usassimo il Tuple Space puro, per vedere se una cella è libera dovremmo fare una <code class="keyword">in</code> cercando una tupla del tipo <code class="atom">{cell, X, Y, empty}</code>. Tuttavia, se la cella fosse occupata, quella tupla non esisterebbe e il nostro server rimarrebbe <strong>congelato (in deadlock)</strong> per sempre nell'attesa che qualcuno la reinserisca, bloccando tutte le successive richieste del WebSocket. Per evitare questo, il server di gioco implementa una <span class="highlight-text">Mappa locale dello stato</span> (<code class="variable">Board = #{}</code>) che funge da specchio ottimizzato a tempo $O(1)$.</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="file-name">gomoku_server.erl</span>
+                    <span class="line-ref">Funzione Callback: handle_call({make_move, ...}, ...)</span>
+                </div>
+                <pre><code><span class="keyword">handle_call</span>({make_move, <span class="variable">Player</span>, <span class="variable">X</span>, <span class="variable">Y</span>}, _From, <span class="variable">State</span>) ->
+    <span class="variable">Board</span> = <span class="variable">State</span>#state.board,
+    <span class="keyword">if</span>
+        <span class="variable">Player</span> =/= <span class="variable">State</span>#state.current_turn ->
+            {reply, {error, <span class="atom">not_your_turn</span>}, <span class="variable">State</span>};
+        <span class="comment">%% Controllo istantaneo in O(1) sulla mappa di stato locale del processo</span>
+        <span class="keyword">is_map_key</span>({<span class="variable">X</span>, <span class="variable">Y</span>}, <span class="variable">Board</span>) ->
+            {reply, {error, <span class="atom">cell_occupied</span>}, <span class="variable">State</span>};
+        true ->
+            <span class="comment">%% Persistenza nel Tuple Space secondo il modello Linda</span>
+            tuple_space:<span class="keyword">out</span>({cell, <span class="variable">X</span>, <span class="variable">Y</span>, <span class="variable">Player</span>}),
+
+            <span class="comment">%% Aggiornamento specchio locale per le prossime validazioni</span>
+            <span class="variable">NewBoard</span> = maps:<span class="keyword">put</span>({<span class="variable">X</span>, <span class="variable">Y</span>}, <span class="variable">Player</span>, <span class="variable">Board</span>),
+
+            <span class="keyword">case</span> <span class="keyword">check_win</span>(<span class="variable">X</span>, <span class="variable">Y</span>, <span class="variable">Player</span>, <span class="variable">NewBoard</span>) <span class="keyword">of</span>
+                true ->
+                    {reply, {ok, {game_over, <span class="variable">Player</span>}}, <span class="variable">State</span>#state{board = <span class="variable">NewBoard</span>}};
+                false ->
+                    <span class="variable">NextTurn</span> = <span class="keyword">switch_turn</span>(<span class="variable">Player</span>),
+                    {reply, {ok, <span class="atom">move_accepted</span>}, <span class="variable">State</span>#state{current_turn = <span class="variable">NextTurn</span>, board = <span class="variable">NewBoard</span>}}
+            <span class="keyword">end</span>
+    <span class="keyword">end</span>;</code></pre>
+            </div>
+        </div>
+
+        <!-- Sezione 4: Algoritmo di Vittoria -->
+        <div id="win_algorithm" class="section-card">
+            <h2>4. Algoritmo di Vittoria Radiale (Gomoku Logic)</h2>
+            <p>Scansionare l'intera matrice $20 	imes 20$ ad ogni mossa sarebbe inefficiente ($O(N^2)$). L'algoritmo implementato in <code class="file-name">gomoku_server.erl</code> è di tipo <strong>radiale ricorsivo</strong>. Prende la coordinata esatta della mossa appena inserita e calcola l'estensione lineare lungo quattro direttrici (orizzontale, verticale, diagonale principale e diagonale secondaria).</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="file-name">gomoku_server.erl</span>
+                    <span class="line-ref">Algoritmo Ricorsivo di Vincita</span>
+                </div>
+                <pre><code><span class="keyword">check_win</span>(<span class="variable">X</span>, <span class="variable">Y</span>, <span class="variable">Player</span>, <span class="variable">Board</span>) ->
+    <span class="comment">%% Le 4 direzioni fondamentali a raggiera</span>
+    <span class="variable">Directions</span> = [{1, 0}, {0, 1}, {1, 1}, {1, -1}],
+    lists:<span class="keyword">any</span>(<span class="keyword">fun</span>({<span class="variable">Dx</span>, <span class="variable">Dy</span>}) ->
+        <span class="comment">%% Conta quante pedine uguali ci sono in un verso e nel suo opposto</span>
+        <span class="variable">Count</span> = 1 + <span class="keyword">count_directional</span>(<span class="variable">X</span>, <span class="variable">Y</span>, <span class="variable">Dx</span>, <span class="variable">Dy</span>, <span class="variable">Player</span>, <span class="variable">Board</span>) +
+                    <span class="keyword">count_directional</span>(<span class="variable">X</span>, <span class="variable">Y</span>, -<span class="variable">Dx</span>, -<span class="variable">Dy</span>, <span class="variable">Player</span>, <span class="variable">Board</span>),
+        <span class="variable">Count</span> >= 5
+    <span class="keyword">end</span>, <span class="variable">Directions</span>).</code></pre>
+            </div>
+
+            <p>La funzione ausiliaria <code class="keyword">count_directional/6</code> effettua passi incrementali di coordinate finché trova elementi di proprietà dello stesso giocatore all'interno della Mappa, garantendo una risposta immediata a costo computazionale bassissimo.</p>
+        </div>
+
+        <!-- Sezione 5: Cowboy WebSockets & Broadcast -->
+        <div id="communication" class="section-card">
+            <h2>5. Comunicazione in Tempo Reale: Cowboy & Process Groups</h2>
+            <p>La comunicazione avviene tramite WebSocket gestiti dalla libreria <strong>Cowboy</strong> (<code class="file-name">gomoku_ws_handler.erl</code>). Quando un utente apre la pagina web, la connessione si trasforma in un canale bidirezionale persistente. </p>
+            <p><strong>Il meccanismo Pub/Sub tramite Process Groups (<code class="keyword">pg</code>):</strong> Erlang possiede una libreria nativa chiamata <code class="keyword">pg</code> (Process Groups) per gestire i canali distribuite in stile Publish/Subscribe. Quando un handler WebSocket viene creato, si iscrive al gruppo comune <code class="atom">gomoku_arena</code>. Quando un giocatore fa una mossa accettata, l'handler recupera tutti i PID dei client connessi e invia loro un messaggio Erlang interno per forzare l'aggiornamento simultaneo.</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="file-name">gomoku_ws_handler.erl</span>
+                    <span class="line-ref">Inizializzazione e Gestione Broadcast</span>
+                </div>
+                <pre><code><span class="keyword">websocket_init</span>(<span class="variable">State</span>) ->
+    <span class="comment">%% Iscrizione dinamica del processo corrente (l'handler) al gruppo globale</span>
+    pg:<span class="keyword">join</span>(gomoku_arena, <span class="keyword">self</span>()),
+    {ok, <span class="variable">State</span>}.
+
+<span class="keyword">websocket_handle</span>({text, <span class="variable">Msg</span>}, <span class="variable">State</span>) ->
+    <span class="keyword">try</span> jsx:<span class="keyword">decode</span>(<span class="variable">Msg</span>, [return_maps]) <span class="keyword">of</span>
+        <span class="variable">CommandMap</span> ->
+            <span class="variable">Action</span> = maps:<span class="keyword">get</span>(&lt;&lt;<span class="string">"action"</span>&gt;&gt;, <span class="variable">CommandMap</span>, &lt;&lt;<span class="string">"unknown"</span>&gt;&gt;),
+            <span class="variable">ResponseMap</span> = <span class="keyword">process_command</span>(<span class="variable">Action</span>, <span class="variable">CommandMap</span>),
+            <span class="variable">JsonResponse</span> = jsx:<span class="keyword">encode</span>(<span class="variable">ResponseMap</span>),
+
+            <span class="comment">%% BROADCAST: estrae i PID iscritti all'arena e distribuisce l'evento</span>
+            <span class="variable">Pids</span> = pg:<span class="keyword">get_members</span>(gomoku_arena),
+            lists:<span class="keyword">foreach</span>(<span class="keyword">fun</span>(<span class="variable">Pid</span>) -> <span class="variable">Pid</span> ! {broadcast, <span class="variable">JsonResponse</span>} <span class="keyword">end</span>, <span class="variable">Pids</span>),
+
+            {ok, <span class="variable">State</span>}
+    <span class="keyword">catch</span>
+        _:_ -> {ok, <span class="variable">State</span>}
+    <span class="keyword">end</span>.
+
+<span class="comment">%% Gestisce la ricezione dei messaggi interni Erlang inviati dal ciclo foreach precedente</span>
+<span class="keyword">websocket_info</span>({broadcast, <span class="variable">JsonResponse</span>}, <span class="variable">State</span>) ->
+    <span class="comment">%% Invia fisicamente il pacchetto JSON sul browser del client via WebSocket</span>
+    {reply, {text, <span class="variable">JsonResponse</span>}, <span class="variable">State</span>};</code></pre>
+            </div>
+        </div>
+
+        <!-- Sezione 6: Albero di Supervisione -->
+        <div id="supervisor" class="section-card">
+            <h2>6. Fault Tolerance e Albero di Supervisione: gomoku_backend_sup.erl</h2>
+            <p>Il concetto cardine di Erlang è <em>"Let it crash"</em> (Lascialo fallire). Invece di scrivere pesanti ed infiniti blocchi try-catch difensivi attorno a ogni singola riga, si isolano i processi e si configurano dei <strong>Supervisori</strong> pronti a riavviare i lavoratori in caso di anomalie non previste.</p>
+            <p>Nel file <code class="file-name">gomoku_backend_sup.erl</code> viene configurata una strategia <code class="atom">one_for_one</code> con una tolleranza massima di 5 crash in 10 secondi.</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="file-name">gomoku_backend_sup.erl</span>
+                    <span class="line-ref">Inizializzazione delle Specifiche dei Figli (Child Specs)</span>
+                </div>
+                <pre><code><span class="keyword">init</span>([]) ->
+    <span class="comment">%% Se un processo figlio muore, riavvia solo lui (one_for_one)</span>
+    <span class="variable">SupFlags</span> = #{strategy => <span class="atom">one_for_one</span>, intensity => 5, period => 10},
+
+    <span class="variable">ChildSpecs</span> = [
+        <span class="comment">%% Figlio 1: Il Tuple Space (Persistenza dei dati)</span>
+        #{id => <span class="atom">tuple_space</span>,
+          start => {tuple_space, <span class="atom">start_link</span>, []},
+          restart => <span class="atom">permanent</span>,
+          type => <span class="atom">worker</span>},
+
+        <span class="comment">%% Figlio 2: Il Server di Gioco (Logica applicativa)</span>
+        #{id => <span class="atom">gomoku_server</span>,
+          start => {gomoku_server, <span class="atom">start_link</span>, []},
+          restart => <span class="atom">permanent</span>,
+          type => <span class="atom">worker</span>}
+    ],
+
+    {ok, {<span class="variable">SupFlags</span>, <span class="variable">ChildSpecs</span>}}.</code></pre>
+            </div>
+        </div>
+
+        <!-- Sezione 7: Frontend -->
+        <div id="frontend" class="section-card">
+            <h2>7. Il Frontend Reattivo & Logiche Anti-Cheat</h2>
+            <p>Il file <code class="file-name">gomoku_game.html</code> è un'interfaccia a pagina singola scritta in puro JavaScript ed accesa graficamente con le classi di utilità di <strong>Tailwind CSS</strong>. Sfrutta l'API nativa <code class="variable">WebSocket</code> del browser.</p>
+            <p>Per salvaguardare la correttezza del gioco a livello di rete, il client applica delle barriere reattive temporanee (<strong>Anti-Cheat e Concorrenza lato UI</strong>): disabilita i click ed i selettori di ruolo non appena la partita è dichiarata conclusa o durante l'attesa del turno avversario, intercettando gli stati <code class="string">move_accepted</code> e <code class="string">game_over</code> provenienti dal backend.</p>
+        </div>
+    </div>
+</body>
+</html>
