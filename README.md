@@ -129,6 +129,21 @@ cd Erlang_gomoku_websockets/Gomoku/gomoku_backend
 
 <hr>
 
+<div align="center">
+<details>
+  <summary> 
+
+  ## 👉 Click here to read the report! 👈
+  
+  </summary>
+
+  [![0001.png](https://github.com/R0mb0/Erlang_gomoku_websockets/blob/main/Readme_imgs/0001.png)](https://r0mb0.github.io/Erlang_gomoku_websockets/)
+  [![0002.png](https://github.com/R0mb0/Erlang_gomoku_websockets/blob/main/Readme_imgs/0002.png)](https://r0mb0.github.io/Erlang_gomoku_websockets/)
+  [![0003.png](https://github.com/R0mb0/Erlang_gomoku_websockets/blob/main/Readme_imgs/0003.png)](https://r0mb0.github.io/Erlang_gomoku_websockets/)
+
+  </details>
+  </div>
+
 <a href="https://github.com/R0mb0/Not_made_by_AI">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/R0mb0/Not_made_by_AI/blob/main/Badge/SVG/NotMadeByAIDark.svg">
